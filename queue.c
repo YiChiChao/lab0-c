@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include <assert.h>
+#include <assert.h>
 #include "queue.h"
 
 /* Notice: sometimes, Cppcheck would find the potential NULL pointer bugs,
@@ -18,7 +19,10 @@ struct list_head *q_new()
     // use INIT_LIST_HEAD and malloc for both declaration and initialization
     struct list_head *new_queue = malloc(sizeof(struct list_head));
     if (new_queue) {
+        if (new_queue) {
         INIT_LIST_HEAD(new_queue);
+    }
+
     }
 
     return new_queue;
@@ -68,13 +72,26 @@ bool q_insert_head(struct list_head *head, char *s)
 bool q_insert_tail(struct list_head *head, char *s)
 {
     return q_insert_head(head->prev, s);
+    return q_insert_head(head->prev, s);
 }
 
 /* Remove an element from head of queue */
 element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 {
     if (list_empty(head)) {
+        if (list_empty(head)) {
         return NULL;
+    }
+    element_t *remove_node = list_first_entry(head, element_t, list);
+    list_del(&remove_node->list);
+
+    // Check if sp is not a null pointer
+    if (sp) {
+        strncpy(sp, remove_node->value, bufsize - 1);
+        sp[bufsize - 1] = '\0';
+    }
+
+    return remove_node;
     }
     element_t *remove_node = list_first_entry(head, element_t, list);
     list_del(&remove_node->list);
@@ -92,11 +109,22 @@ element_t *q_remove_head(struct list_head *head, char *sp, size_t bufsize)
 element_t *q_remove_tail(struct list_head *head, char *sp, size_t bufsize)
 {
     return q_remove_head(head->prev->prev, sp, bufsize);
+    return q_remove_head(head->prev->prev, sp, bufsize);
 }
 
 /* Return number of elements in queue */
 int q_size(struct list_head *head)
 {
+    if (!head || list_empty(head)) {
+        return 0;
+    }
+
+    int count = 0;
+    struct list_head *node;
+    list_for_each (node, head) {
+        count++;
+    }
+    return count;
     if (!head || list_empty(head)) {
         return 0;
     }
@@ -113,6 +141,24 @@ int q_size(struct list_head *head)
 bool q_delete_mid(struct list_head *head)
 {
     // https://leetcode.com/problems/delete-the-middle-node-of-a-linked-list/
+
+    if (!head || list_empty(head)) {
+        return false;
+    }
+
+    int mid = q_size(head) / 2;
+
+    // Get to the target node
+    struct list_head *current = head->next;
+    for (int i = mid; i > 0; i--) {
+        current = current->next;
+    }
+    list_del(current);
+    element_t *delete_node = list_entry(current, element_t, list);
+    free(delete_node->value);
+    delete_node->value = NULL;
+    free(delete_node);
+
 
     if (!head || list_empty(head)) {
         return false;
