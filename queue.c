@@ -53,12 +53,10 @@ bool q_insert_head(struct list_head *head, char *s)
     }
 
     element_t *nownode = malloc(sizeof(element_t));
-    assert(nownode);
     if (!nownode) {
         return false;
     }
     nownode->value = strdup(s);
-
     if (!nownode->value) {
         free(nownode);
         return false;
@@ -180,20 +178,120 @@ bool q_delete_dup(struct list_head *head)
 /* Swap every two adjacent nodes */
 void q_swap(struct list_head *head)
 {
+    struct list_head *node = head->next;
+    while (node != head) {
+        if (node->next == head)
+            break;
+        element_t *cur = list_entry(node, element_t, list);
+        element_t *next = list_entry(node->next, element_t, list);
+        char *tmp = cur->value;
+        cur->value = next->value;
+        next->value = tmp;
+        node = node->next->next;
+    }
     // https://leetcode.com/problems/swap-nodes-in-pairs/
 }
 
 /* Reverse elements in queue */
-void q_reverse(struct list_head *head) {}
+void q_reverse(struct list_head *head)
+{
+    if (!head || list_empty(head) || list_is_singular(head)) {
+        return;
+    }
+    struct list_head *tmp = head->prev;
+    head->prev = head->next;
+    head->next = tmp;
+    struct list_head *cur = head->next;
+    while (cur != head) {
+        tmp = cur->prev;
+        cur->prev = cur->next;
+        cur->next = tmp;
+        cur = cur->next;
+    }
+}
 
 /* Reverse the nodes of the list k at a time */
 void q_reverseK(struct list_head *head, int k)
 {
+    if (!head || list_empty(head) || list_is_singular(head)) {
+        return;
+    }
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
 }
 
+struct list_head *merge(struct list_head *L1, struct list_head *L2)
+{
+    struct list_head *head = L1, **ptr = &head;
+    struct list_head *prev = NULL;
+    while (L1 && L2) {
+        if (strcmp(list_entry(L1, element_t, list)->value,
+                   list_entry(L2, element_t, list)->value) <= 0) {
+            *ptr = L1;
+            (*ptr)->prev = prev;
+            ptr = &(*ptr)->next;
+            prev = L1;
+            L1 = L1->next;
+        } else {
+            *ptr = L2;
+            (*ptr)->prev = prev;
+            ptr = &(*ptr)->next;
+            prev = L2;
+            L2 = L2->next;
+        }
+    }
+
+    if (L1) {
+        *ptr = L1;
+        (*ptr)->prev = prev;
+    }
+
+    if (L2) {
+        *ptr = L2;
+        (*ptr)->prev = prev;
+    }
+
+
+    return head;
+}
+
+struct list_head *mergesort(struct list_head *head)
+{
+    if (!head || !head->next) {
+        return head;
+    }
+
+    struct list_head *slow = head;
+    struct list_head *fast = head->next;
+    while (fast && fast->next) {
+        slow = slow->next;
+        fast = fast->next->next;
+    }
+
+    // Cut into two single linked list
+    fast = slow->next;
+    slow->next = NULL;
+    return merge(mergesort(head), mergesort(fast));
+}
+
 /* Sort elements of queue in ascending/descending order */
-void q_sort(struct list_head *head, bool descend) {}
+void q_sort(struct list_head *head, bool descend)
+{
+    if (!head || list_empty(head) || list_is_singular(head)) {
+        return;
+    }
+    head->prev->next = NULL;
+    head->next = mergesort(head->next);
+    head->next->prev = head;
+    struct list_head *get_tail = head->next;
+    while (get_tail->next) {
+        get_tail = get_tail->next;
+    }
+    head->prev = get_tail;
+    get_tail->next = head;
+    if (descend) {
+        q_reverse(head);
+    }
+}
 
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
