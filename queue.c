@@ -159,6 +159,10 @@ bool q_delete_dup(struct list_head *head)
                 continue;
             } else {
                 // Update the prob if cur and next have the same string
+                if (prob) {
+                    free(prob);
+                    prob = NULL;
+                }
                 prob = strdup(cur->value);
             }
         }
@@ -216,6 +220,38 @@ void q_reverseK(struct list_head *head, int k)
     if (!head || list_empty(head) || list_is_singular(head)) {
         return;
     }
+    // Check if the list size is over k
+    int length = q_size(head);
+
+    if (length < k)
+        return;
+    int iterate = length / k;
+    struct list_head *nownode = head->next;
+    struct list_head *head_prev = head;
+    while (iterate--) {
+        struct list_head *list_first = nownode;
+        struct list_head *list_tail = NULL;
+        struct list_head *tmp = NULL;
+        for (int i = k; i > 0; i--) {
+            if (i == 1) {
+                list_tail = tmp;
+            }
+            tmp = nownode->next;
+            nownode->next = nownode->prev;
+            nownode->prev = tmp;
+            nownode = tmp;
+        }
+        if (list_tail) {
+            head_prev->next = list_tail;
+            tmp = list_tail->prev;
+            list_tail->prev = list_first->next;
+            list_first->next = tmp;
+            nownode->prev = list_first;
+            head_prev = list_first;
+        }
+    }
+
+
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
 }
 
@@ -297,6 +333,28 @@ void q_sort(struct list_head *head, bool descend)
  * the right side of it */
 int q_ascend(struct list_head *head)
 {
+    char *less = NULL;
+    struct list_head *nownode;
+    struct list_head *safe;
+    for (nownode = (head)->prev, safe = nownode->prev; nownode != (head);
+         nownode = safe, safe = nownode->prev) {
+        element_t *nownode_entry = list_entry(nownode, element_t, list);
+        if (!less || strcmp(nownode_entry->value, less) < 0) {
+            if (less) {
+                free(less);
+                less = NULL;
+            }
+            less = strdup(nownode_entry->value);
+        } else {
+            list_del(&nownode_entry->list);
+            free(nownode_entry->value);
+            free(nownode_entry);
+        }
+    }
+    if (less) {
+        free(less);
+        less = NULL;
+    }
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
     return 0;
 }
@@ -305,6 +363,28 @@ int q_ascend(struct list_head *head)
  * the right side of it */
 int q_descend(struct list_head *head)
 {
+    char *greater = NULL;
+    struct list_head *nownode;
+    struct list_head *safe;
+    for (nownode = (head)->prev, safe = nownode->prev; nownode != (head);
+         nownode = safe, safe = nownode->prev) {
+        element_t *nownode_entry = list_entry(nownode, element_t, list);
+        if (!greater || strcmp(nownode_entry->value, greater) > 0) {
+            if (greater) {
+                free(greater);
+                greater = NULL;
+            }
+            greater = strdup(nownode_entry->value);
+        } else {
+            list_del(&nownode_entry->list);
+            free(nownode_entry->value);
+            free(nownode_entry);
+        }
+    }
+    if (greater) {
+        free(greater);
+        greater = NULL;
+    }
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
     return 0;
 }
@@ -313,6 +393,21 @@ int q_descend(struct list_head *head)
  * order */
 int q_merge(struct list_head *head, bool descend)
 {
+    if (!head || list_empty(head))
+        return 0;
+
+    queue_contex_t *node = list_entry(head->next, queue_contex_t, chain);
+    if (list_is_singular(head))
+        return node->size;
+
+    struct list_head *tmp;
+    for (tmp = head->next->next; tmp != head; tmp = tmp->next) {
+        queue_contex_t *next = list_entry(tmp, queue_contex_t, chain);
+        list_splice_init(next->q, node->q);
+        next->size = 0;
+        node->size = q_size(node->q);
+    }
+    q_sort(node->q, false);
     // https://leetcode.com/problems/merge-k-sorted-lists/
-    return 0;
+    return node->size;
 }
