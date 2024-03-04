@@ -159,10 +159,7 @@ bool q_delete_dup(struct list_head *head)
                 continue;
             } else {
                 // Update the prob if cur and next have the same string
-                if (prob) {
-                    free(prob);
-                    prob = NULL;
-                }
+                free(prob);
                 prob = strdup(cur->value);
             }
         }
