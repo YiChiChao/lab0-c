@@ -363,7 +363,7 @@ int q_ascend(struct list_head *head)
         less = NULL;
     }
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    return q_size(head);
 }
 
 /* Remove every node which has a node with a strictly greater value anywhere to
@@ -393,7 +393,7 @@ int q_descend(struct list_head *head)
         greater = NULL;
     }
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    return q_size(head);
 }
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
