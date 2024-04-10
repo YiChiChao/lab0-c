@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -O1 -g -Wall -Werror -Idudect -I.
-
+# https://gist.github.com/idhowardgj94/9a3a523e66f04ca87c3c41fa691128c5
 # Emit a warning should any variable-length array be found within the code.
 CFLAGS += -Wvla
 
@@ -37,7 +37,7 @@ $(GIT_HOOKS):
 	@scripts/install-git-hooks
 	@echo
 
-OBJS := qtest.o report.o console.o harness.o queue.o \
+OBJS := qtest.o report.o console.o harness.o timsort.o queue.o \
         random.o dudect/constant.o dudect/fixture.o dudect/ttest.o \
         shannon_entropy.o \
         linenoise.o web.o
@@ -54,7 +54,7 @@ qtest: $(OBJS)
 	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF .$@.d $<
 
 check: qtest
-	./$< -v 3 -f traces/trace-eg.cmd
+	./$< -v 3 -f traces/trace-06-ops.cmd
 
 test: qtest scripts/driver.py
 	scripts/driver.py -c
